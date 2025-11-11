@@ -1,5 +1,5 @@
 {
-  "name": "elena-ai",
+  "name": "ai-website-builder",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@e2b/code-interpreter": "^2.2.0",
     "@hookform/resolvers": "^5.2.1",
     "@inngest/agent-kit": "^0.13.1",
     "@prisma/client": "^6.13.0",
