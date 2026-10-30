@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Website Builder
 
-## Getting Started
+> Work in progress. A learning project for agent orchestration, background jobs and sandboxed code execution.
 
-First, run the development server:
+A prompt-to-website builder: you describe a site, a code agent builds it in an isolated cloud sandbox, and you get back a live preview URL.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## How it works
+
+```
+Next.js UI ──tRPC mutation──▶ Inngest event "backend/job"
+                                   │
+                                   ▼
+                         Inngest function (durable steps)
+                           1. create E2B sandbox from the
+                              custom Next.js + shadcn/ui template
+                           2. run the code agent (Inngest AgentKit)
+                           3. return the sandbox preview URL
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Durable jobs.** Every stage runs as an Inngest step, so a long generation survives retries and restarts instead of living inside one HTTP request.
+- **Isolated execution.** Generated code never runs on the app server. It runs in an [E2B](https://e2b.dev) sandbox built from `sandbox-templates/nextjs`: Next.js 15 with every shadcn/ui component preinstalled and a dev server that is already warm when the sandbox starts.
+- **End-to-end types.** The UI talks to the backend through tRPC with TanStack Query, so the job input is typed from the form to the event.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Status
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Done | Next |
+|---|---|
+| tRPC → Inngest event pipeline | Agent tools for reading and writing files and running terminal commands inside the sandbox |
+| Custom E2B sandbox template (Next.js 15 + shadcn/ui) | Agent loop with a "done" check and a step budget |
+| Sandbox creation and preview URL as job steps | Saving projects and messages with Prisma (PostgreSQL) |
+| First code agent wired through Inngest AgentKit | Chat UI with a live preview and code view |
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
+Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui, tRPC, TanStack Query, Inngest + AgentKit, E2B, Prisma, PostgreSQL.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Run locally
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+cp .env.example .env    # OPENAI_API_KEY, E2B_API_KEY, DATABASE_URL
+npx inngest-cli@latest dev   # Inngest dev server
+npm run dev
+```
 
-## Deploy on Vercel
+Build the sandbox template once with the E2B CLI:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+cd sandbox-templates/nextjs
+e2b template build --name ai-website-builder-docker --cmd "/compile_page.sh"
+```
